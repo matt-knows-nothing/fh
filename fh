@@ -193,7 +193,7 @@ fi
 
 cat <<EOF
 
-✔ Created flake project ${proj_name} in: $(pwd)
+✔ Created flake project ${proj_name} in: $PWD
 
 Notes:
  - Use --no-git to skip git initialization.
