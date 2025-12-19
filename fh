@@ -12,7 +12,7 @@ set -euo pipefail
 
 # default PS1 used when FH_PS1 is not provided
 # DEFAULT_PS1='\[\e[38;5;187m\]┌─[\u] [\w] \[\e[38;5;181m\][dev]\[\e[38;5;187m\]\n\[\e[38;5;187m\]└─λ \[\e[0m\]'
-DEFAULT_PS1="$PS1"
+DEFAULT_PS1="\n\[\033[$PROMPT_COLOR\][\[\e]0;\u@\h: \w\a\]\u@\h:\w]\\$\[\033[0m\] "
 
 # Use FH_PS1 (provided by Home Manager module) if present, otherwise fallback to DEFAULT_PS1
 PS1_TO_USE="${FH_PS1:-$DEFAULT_PS1}"
