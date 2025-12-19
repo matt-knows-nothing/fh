@@ -68,14 +68,14 @@ if [ -z "$proj_name" ]; then
   exit 1
 fi
 
-# Create a literal snippet that will be injected into the flake.nix.
-# Use a single-quoted heredoc to preserve the ${FH_PS1:-} text (do NOT expand it now).
+# IMPORTANT: we must escape ${ for Nix indented strings by prefixing with two single quotes.
+# This produces literal ''${FH_PS1:-} in flake.nix, which Nix will NOT interpolate,
+# leaving ${FH_PS1:-} for Bash to expand at runtime.
 read -r -d '' write_shell_hook_ps1 <<'SH' || true
-if [ -n "\${FH_PS1:-}" ]; then
-  export PS1="\${FH_PS1}"
+if [ -n ''${FH_PS1:-} ]; then
+  export PS1=''${FH_PS1}
 fi
 SH
-
 
 write_flake_default() {
   cat > flake.nix <<EOF
