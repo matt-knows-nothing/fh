@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2016,SC2154
 # fh — scaffold a small nix flake dev project
 #
 # Usage:
@@ -14,29 +13,30 @@
 set -euo pipefail
 
 usage() {
-  cat <<EOF >&2
+  cat <<'USAGE' >&2
 usage: fh <rust|wasm|default> <dir> [--no-git] [--force]
-EOF
+USAGE
   exit 1
 }
 
-if [ $# -lt 1 ]; then usage; fi
+if [ "$#" -lt 1 ]; then usage; fi
 
-if [ $# -eq 1 ]; then
+if [ "$#" -eq 1 ]; then
   LANG="default"
-  DIR=$1
+  DIR="$1"
 else
-  LANG=$1
-  DIR=$2
+  LANG="$1"
+  DIR="$2"
 fi
 
+# consume the positional args we handled above
 shift $(( $# > 1 ? 2 : 1 ))
 
 NO_GIT=0
 FORCE=0
 
-while [ $# -gt 0 ]; do
-  case $1 in
+while [ "$#" -gt 0 ]; do
+  case "$1" in
     --no-git) NO_GIT=1 ;;
     --force) FORCE=1 ;;
     -h|--help) usage ;;
@@ -45,16 +45,18 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-mkdir -p $DIR
+# create target dir (mkdir -p is idempotent)
+mkdir -p "$DIR"
 
-if [ $FORCE -ne 1 ] && [ "$(find $DIR -mindepth 1 -maxdepth 1 | wc -l)" -gt 0 ]; then
-  echo "Directory $DIR is not empty. Use --force to continue." >&2
+# if not forcing, make sure dir is empty
+if [ "$FORCE" -ne 1 ] && [ "$(find "$DIR" -mindepth 1 -maxdepth 1 | wc -l)" -gt 0 ]; then
+  echo "Directory '$DIR' is not empty. Use --force to continue." >&2
   exit 1
 fi
 
-cd $DIR
+cd "$DIR"
 
-proj_base="$(basename $DIR)"
+proj_base="$(basename "$DIR")"
 proj_name="$(printf '%s' "$proj_base" \
   | iconv -f utf8 -t ascii//TRANSLIT 2>/dev/null || true)"
 proj_name="$(printf '%s' "$proj_name" \
@@ -66,11 +68,13 @@ if [ -z "$proj_name" ]; then
   exit 1
 fi
 
-write_shell_hook_ps1="
-if [ -n ${FH_PS1:-} ]; then
-  export PS1=$FH_PS1
+# Create a literal snippet that will be injected into the flake.nix.
+# Use a single-quoted heredoc to preserve the ${FH_PS1:-} text (do NOT expand it now).
+read -r -d '' write_shell_hook_ps1 <<'SH' || true
+if [ -n "${FH_PS1:-}" ]; then
+  export PS1="${FH_PS1}"
 fi
-"
+SH
 
 write_flake_default() {
   cat > flake.nix <<EOF
@@ -89,7 +93,7 @@ write_flake_default() {
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [ ];
           shellHook = ''
-            ${write_shell_hook_ps1}
+${write_shell_hook_ps1}
           '';
         };
       }
@@ -122,7 +126,7 @@ write_flake_rust() {
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [ rust llvmPackages.bintools ];
           shellHook = ''
-            ${write_shell_hook_ps1}
+${write_shell_hook_ps1}
             export CARGO_HOME="\$PWD/.cargo"
           '';
         };
@@ -162,7 +166,7 @@ write_flake_wasm() {
             rust llvmPackages.bintools nodejs wasm-pack trunk
           ];
           shellHook = ''
-            ${write_shell_hook_ps1}
+${write_shell_hook_ps1}
             export CARGO_HOME="\$PWD/.cargo"
           '';
         };
@@ -172,7 +176,7 @@ write_flake_wasm() {
 EOF
 }
 
-case $LANG in
+case "$LANG" in
   default) write_flake_default ;;
   rust)    write_flake_rust ;;
   wasm)    write_flake_wasm ;;
@@ -185,7 +189,7 @@ printf ".cargo/\ntarget/\n" >> .gitignore
 
 [ ! -f .rustfmt.toml ] && printf "tab_spaces = 2\n" > .rustfmt.toml
 
-if [ $NO_GIT -eq 0 ] && [ ! -d .git ]; then
+if [ "$NO_GIT" -eq 0 ] && [ ! -d .git ]; then
   git init
   git add -A
   git commit -m "Initial commit (created by fh)" || true
