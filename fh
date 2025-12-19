@@ -74,6 +74,8 @@ fi
 read -r -d '' write_shell_hook_ps1 <<'SH' || true
 if [ -n ''${FH_PS1:-} ]; then
   export PS1=''${FH_PS1}
+else
+  export PS1="[\u@\h \w]$ "
 fi
 SH
 
