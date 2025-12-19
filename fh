@@ -69,7 +69,7 @@ if [ -z "$proj_name" ]; then
 fi
 
 # IMPORTANT: emit literal ''${...} so Nix does NOT interpolate; Bash will at runtime.
-read -r -d '' write_shell_hook_ps1 <<'SH' || true
+# read -r -d '' write_shell_hook_ps1 <<'SH' || true
 # Choose PS1 in this order:
 # 1) FH_PS1 (if provided by Home Manager/module)
 # 2) existing PS1 (if present in user environment)
