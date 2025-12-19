@@ -48,7 +48,7 @@ done
 mkdir -p "$DIR"
 
 if [ "$FORCE" -ne 1 ] && [ "$(find "$DIR" -mindepth 1 -maxdepth 1 | wc -l)" -gt 0 ]; then
-  echo "Directory '$DIR' is not empty. Use --force to continue." >&2
+  echo "Directory "$DIR" is not empty. Use --force to continue." >&2
   exit 1
 fi
 
@@ -66,11 +66,11 @@ if [ -z "$proj_name" ]; then
   exit 1
 fi
 
-write_shell_hook_ps1='
+write_shell_hook_ps1="
 if [ -n "${FH_PS1:-}" ]; then
   export PS1="$FH_PS1"
 fi
-'
+"
 
 write_flake_default() {
   cat > flake.nix <<EOF
@@ -193,7 +193,7 @@ fi
 
 cat <<EOF
 
-✔ Created flake project '${proj_name}' in: $(pwd)
+✔ Created flake project "${proj_name}" in: $(pwd)
 
 Notes:
  - Use --no-git to skip git initialization.
