@@ -1,0 +1,264 @@
+#!/usr/bin/env bash
+# fh — scaffold a small nix flake dev project (flake-only + mkdir)
+# Usage:
+#   fh <dir>                    # default (bare-bones flake)
+#   fh rust <dir>               # rust flake (bare)
+#   fh wasm <dir>               # wasm flake (bare)
+# Options:
+#   --no-git    : don't run git init/commit
+#   --force     : allow creating in a non-empty directory (overwrites some files)
+
+set -euo pipefail
+
+# default PS1 used when FH_PS1 is not provided
+DEFAULT_PS1='\[\e[38;5;187m\]┌─[\u] [\w] \[\e[38;5;181m\][dev]\[\e[38;5;187m\]\n\[\e[38;5;187m\]└─λ \[\e[0m\]'
+
+# Use FH_PS1 (provided by Home Manager module) if present, otherwise fallback to DEFAULT_PS1
+PS1_TO_USE="${FH_PS1:-$DEFAULT_PS1}"
+
+usage() {
+  cat <<EOF >&2
+usage: fh <rust|wasm|default> <dir> [--no-git] [--force]
+EOF
+  exit 1
+}
+
+if [ "$#" -lt 1 ]; then usage; fi
+
+if [ "$#" -eq 1 ]; then
+  LANG="default"
+  DIR="$1"
+else
+  LANG="$1"
+  DIR="$2"
+fi
+
+shift $(( $# > 1 ? 2 : 1 ))
+NO_GIT=0
+FORCE=0
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --no-git) NO_GIT=1; shift ;;
+    --force) FORCE=1; shift ;;
+    -h|--help) usage ;;
+    *) echo "Unknown option: $1"; usage ;;
+  esac
+done
+
+mkdir -p "$DIR"
+proj_base="$(basename "$DIR")"
+proj_name="$(printf '%s' "$proj_base" | iconv -f utf8 -t ascii//TRANSLIT 2>/dev/null || true)"
+proj_name="$(printf '%s' "$proj_name" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g' | sed -E 's/^-|-$//g')"
+if [ -z "$proj_name" ]; then
+  echo "Could not derive project name from '$DIR' — please choose a different directory." >&2
+  exit 1
+fi
+
+if [ "$FORCE" -ne 1 ]; then
+  if [ "$(find "$DIR" -mindepth 1 -maxdepth 1 | wc -l)" -gt 0 ]; then
+    echo "Directory '$DIR' is not empty. Use --force to scaffold into a non-empty dir." >&2
+    exit 1
+  fi
+fi
+
+cd "$DIR"
+
+# helper to escape PS1 for sed in-place replacement (used below)
+_escape_for_sed() {
+  printf '%s' "$1" | sed -e 's/[\/&]/\\&/g'
+}
+
+write_flake_default() {
+  cat <<'EOF' > flake.nix
+{
+  description = "__NAME__ bare flake";
+
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+  };
+
+  outputs = { self, nixpkgs, flake-utils, ... }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+      in {
+        devShells.default = pkgs.mkShell {
+          packages = with pkgs; [ ];
+          shellHook = ''
+            export PS1="__PS1__"
+          '';
+        };
+      }
+    );
+}
+EOF
+  sed -i "s|__NAME__|$proj_name|g" flake.nix
+  sed -i "s|__PS1__|__PS1_PLACEHOLDER__|g" flake.nix
+}
+
+write_flake_rust() {
+  cat <<'EOF' > flake.nix
+{
+  description = "__NAME__ rust flake";
+
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+    fenix = {
+      url = "github:nix-community/fenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+
+  outputs = { self, nixpkgs, flake-utils, fenix, ... }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+        rustToolchain = with fenix.packages.${system};
+          combine [
+            stable.toolchain
+            stable.rust-src
+          ];
+      in {
+        devShells.default = pkgs.mkShell {
+          packages = with pkgs; [
+            rustToolchain
+            llvmPackages.bintools
+          ];
+          shellHook = ''
+            export PS1="__PS1__"
+            export CARGO_HOME="$PWD/.cargo";
+          '';
+        };
+      }
+    );
+}
+EOF
+  sed -i "s|__NAME__|$proj_name|g" flake.nix
+  sed -i "s|__PS1__|__PS1_PLACEHOLDER__|g" flake.nix
+}
+
+write_flake_wasm() {
+  cat <<'EOF' > flake.nix
+{
+  description = "__NAME__ wasm flake";
+
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+    fenix = {
+      url = "github:nix-community/fenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+
+  outputs = { self, nixpkgs, flake-utils, fenix, ... }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+        rustToolchain = with fenix.packages.${system};
+          combine [
+            stable.toolchain
+            stable.rust-src
+            targets.wasm32-unknown-unknown.stable.rust-std
+          ];
+      in {
+        devShells.default = pkgs.mkShell {
+          packages = [
+            rustToolchain
+            llvmPackages.bintools
+            nodejs
+            wasm-pack
+            trunk
+          ];
+          shellHook = ''
+            export PS1="__PS1__"
+            export CARGO_HOME="$PWD/.cargo";
+          '';
+        };
+      }
+    );
+}
+EOF
+  sed -i "s|__NAME__|$proj_name|g" flake.nix
+  sed -i "s|__PS1__|__PS1_PLACEHOLDER__|g" flake.nix
+}
+
+# create files according to language
+case "$LANG" in
+  default)
+    write_flake_default
+    ;;
+  rust)
+    write_flake_rust
+    ;;
+  wasm)
+    write_flake_wasm
+    ;;
+  *)
+    echo "Unknown language: $LANG" >&2
+    usage
+    ;;
+esac
+
+# replace PS1 placeholder with escaped PS1 value
+ps1_escaped="$(_escape_for_sed "$PS1_TO_USE")"
+sed -i "s|__PS1_PLACEHOLDER__|$ps1_escaped|g" flake.nix
+
+# helpful auxiliary files (gitignore, rustfmt; no cargo actions)
+: > .gitignore || true
+grep -qxF '.cargo/' .gitignore || printf '.cargo/\n' >> .gitignore
+grep -qxF 'target/' .gitignore || printf 'target/\n' >> .gitignore
+if [ "$LANG" = "wasm" ]; then
+  grep -qxF 'dist/' .gitignore || printf 'dist/\n' >> .gitignore
+  grep -qxF 'pkg/' .gitignore || printf 'pkg/\n' >> .gitignore
+fi
+
+if [ ! -f rustfmt.toml ] && [ ! -f .rustfmt.toml ]; then
+  printf 'tab_spaces = 2\n' > .rustfmt.toml
+fi
+
+if [ "$LANG" = "wasm" ]; then
+  if [ ! -f index.html ]; then
+    cat > index.html <<'HTML'
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>WASM</title>
+  </head>
+  <body>
+  </body>
+</html>
+HTML
+  fi
+
+  if [ ! -f trunk.toml ]; then
+    cat > trunk.toml <<'EOF'
+[build]
+target = "wasm32-unknown-unknown"
+EOF
+  fi
+fi
+
+if [ "$NO_GIT" -eq 0 ]; then
+  if [ ! -d .git ]; then
+    git init
+    git add -A
+    git commit -m "Initial commit (created by fh)" || true
+  else
+    echo "Already a git repository; not initializing."
+  fi
+else
+  echo "--no-git specified; skipping git init/commit"
+fi
+
+cat <<EOF
+
+✔ Created flake project '$proj_name' in: $(pwd)
+
+Notes:
+ - Use --no-git to skip git initialization. Use --force to scaffold into non-empty dirs.
+EOF
+exit 0
