@@ -74,14 +74,14 @@ read -r -d '' write_shell_hook_ps1 <<'SH' || true
 # 1) FH_PS1 (if provided by Home Manager/module)
 # 2) existing PS1 (if present in user environment)
 # 3) safe default
-if [ -n ''${FH_PS1:-} ]; then
-  export PS1=''${FH_PS1}
-elif [ -n ''${PS1:-} ]; then
-  export PS1=''${PS1}
-else
-  export PS1="[\u@\h \w]$ "
-fi
-SH
+# if [ -n ''${FH_PS1:-} ]; then
+#   export PS1=''${FH_PS1}
+# elif [ -n ''${PS1:-} ]; then
+#   export PS1=''${PS1}
+# else
+#   export PS1="[\u@\h \w]$ "
+# fi
+# SH
 
 write_flake_default() {
   cat > flake.nix <<EOF
@@ -100,7 +100,13 @@ write_flake_default() {
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [ ];
           shellHook = ''
-${write_shell_hook_ps1}
+            if [ -n "${FH_PS1-}" ]; then
+              export PS1="${FH_PS1}"
+            elif [ -n "${PS1-}" ]; then
+              export PS1="${PS1}"
+            else
+              export PS1="[\u@\h \w]$ "
+            fi
           '';
         };
       }
@@ -133,7 +139,13 @@ write_flake_rust() {
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [ rust llvmPackages.bintools ];
           shellHook = ''
-${write_shell_hook_ps1}
+            if [ -n "${FH_PS1-}" ]; then
+              export PS1="${FH_PS1}"
+            elif [ -n "${PS1-}" ]; then
+              export PS1="${PS1}"
+            else
+              export PS1="[\u@\h \w]$ "
+            fi
             export CARGO_HOME="\$PWD/.cargo"
           '';
         };
@@ -173,7 +185,13 @@ write_flake_wasm() {
             rust llvmPackages.bintools nodejs wasm-pack trunk
           ];
           shellHook = ''
-${write_shell_hook_ps1}
+            if [ -n "${FH_PS1-}" ]; then
+              export PS1="${FH_PS1}"
+            elif [ -n "${PS1-}" ]; then
+              export PS1="${PS1}"
+            else
+              export PS1="[\u@\h \w]$ "
+            fi
             export CARGO_HOME="\$PWD/.cargo"
           '';
         };
