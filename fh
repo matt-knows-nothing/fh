@@ -10,7 +10,7 @@
 #   --no-git    : skip git init / commit
 #   --force     : allow non-empty directory
 
-set -euo pipefail
+set -eo pipefail
 
 usage() {
   cat <<'USAGE' >&2
@@ -68,12 +68,12 @@ if [ -z "$proj_name" ]; then
   exit 1
 fi
 
-# IMPORTANT: we must escape ${ for Nix indented strings by prefixing with two single quotes.
-# This produces literal ''${FH_PS1:-} in flake.nix, which Nix will NOT interpolate,
-# leaving ${FH_PS1:-} for Bash to expand at runtime.
 read -r -d '' write_shell_hook_ps1 <<'SH' || true
-if [ -n ''${FH_PS1:-} ]; then
-  export PS1=''${FH_PS1}
+# If FH_PS1 is set, use it. Otherwise, fall back to the current PS1 or a default.
+if [ -n "${FH_PS1-}" ]; then
+  export PS1="${FH_PS1}"
+elif [ -n "${PS1-}" ]; then
+  export PS1="${PS1}"
 else
   export PS1="[\u@\h \w]$ "
 fi
