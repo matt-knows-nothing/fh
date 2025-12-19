@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2016,SC2154
 # fh — scaffold a small nix flake dev project
 #
 # Usage:
@@ -121,7 +122,7 @@ write_flake_rust() {
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [ rust llvmPackages.bintools ];
           shellHook = ''
-            ${write_shell_hook}
+            ${write_shell_hook_ps1}
             export CARGO_HOME="\$PWD/.cargo"
           '';
         };
@@ -161,7 +162,7 @@ write_flake_wasm() {
             rust llvmPackages.bintools nodejs wasm-pack trunk
           ];
           shellHook = ''
-            ${write_shell_hook}
+            ${write_shell_hook_ps1}
             export CARGO_HOME="\$PWD/.cargo"
           '';
         };
