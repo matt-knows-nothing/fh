@@ -27,7 +27,7 @@ if [ $# -eq 1 ]; then
   DIR=$1
 else
   LANG=$1
-  DIR="$2
+  DIR=$2
 fi
 
 shift $(( $# > 1 ? 2 : 1 ))
@@ -176,7 +176,7 @@ case $LANG in
   default) write_flake_default ;;
   rust)    write_flake_rust ;;
   wasm)    write_flake_wasm ;;
-  *) echo "Unknown language: $LANG >&2; usage ;;
+  *) echo "Unknown language: $LANG" >&2; usage ;;
 esac
 
 : > .gitignore
