@@ -10,7 +10,7 @@
 #   --no-git    : skip git init / commit
 #   --force     : allow non-empty directory
 
-set -eo pipefail
+set -euo pipefail
 
 usage() {
   cat <<'USAGE' >&2
@@ -68,12 +68,16 @@ if [ -z "$proj_name" ]; then
   exit 1
 fi
 
+# IMPORTANT: emit literal ''${...} so Nix does NOT interpolate; Bash will at runtime.
 read -r -d '' write_shell_hook_ps1 <<'SH' || true
-# If FH_PS1 is set, use it. Otherwise, fall back to the current PS1 or a default.
-if [ -n "${FH_PS1-}" ]; then
-  export PS1="${FH_PS1}"
-elif [ -n "${PS1-}" ]; then
-  export PS1="${PS1}"
+# Choose PS1 in this order:
+# 1) FH_PS1 (if provided by Home Manager/module)
+# 2) existing PS1 (if present in user environment)
+# 3) safe default
+if [ -n ''${FH_PS1:-} ]; then
+  export PS1=''${FH_PS1}
+elif [ -n ''${PS1:-} ]; then
+  export PS1=''${PS1}
 else
   export PS1="[\u@\h \w]$ "
 fi
