@@ -67,7 +67,7 @@ if [ -z "$proj_name" ]; then
 fi
 
 write_shell_hook_ps1='
-if [ -n "''${FH_PS1-}" ]; then
+if [ -n "${FH_PS1:-}" ]; then
   export PS1="$FH_PS1"
 fi
 '
