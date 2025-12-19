@@ -100,14 +100,8 @@ write_flake_default() {
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [ ];
           shellHook = ''
-            if [ -n "${FH_PS1-}" ]; then
-              export PS1="${FH_PS1}"
-            elif [ -n "${PS1-}" ]; then
-              export PS1="${PS1}"
-            else
-              export PS1="[\u@\h \w]$ "
-            fi
-          '';
+            export PS1="${FH_PS1:-${PS1:-[\u@\h \w]$ }}"
+         '';
         };
       }
     );
@@ -139,13 +133,7 @@ write_flake_rust() {
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [ rust llvmPackages.bintools ];
           shellHook = ''
-            if [ -n "${FH_PS1-}" ]; then
-              export PS1="${FH_PS1}"
-            elif [ -n "${PS1-}" ]; then
-              export PS1="${PS1}"
-            else
-              export PS1="[\u@\h \w]$ "
-            fi
+            export PS1="${FH_PS1:-${PS1:-[\u@\h \w]$ }}"
             export CARGO_HOME="\$PWD/.cargo"
           '';
         };
@@ -185,13 +173,7 @@ write_flake_wasm() {
             rust llvmPackages.bintools nodejs wasm-pack trunk
           ];
           shellHook = ''
-            if [ -n "${FH_PS1-}" ]; then
-              export PS1="${FH_PS1}"
-            elif [ -n "${PS1-}" ]; then
-              export PS1="${PS1}"
-            else
-              export PS1="[\u@\h \w]$ "
-            fi
+            export PS1="${FH_PS1:-${PS1:-[\u@\h \w]$ }}"
             export CARGO_HOME="\$PWD/.cargo"
           '';
         };
