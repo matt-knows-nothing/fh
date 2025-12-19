@@ -61,7 +61,7 @@ proj_name="$(printf '%s' "$proj_name" \
   | tr '[:upper:]' '[:lower:]' \
   | sed -E 's/[^a-z0-9]+/-/g; s/^-|-$//g')"
 
-if [ -z $proj_name ]; then
+if [ -z "$proj_name" ]; then
   echo "Invalid project name derived from '$DIR'" >&2
   exit 1
 fi
@@ -181,7 +181,7 @@ esac
 
 : > .gitignore
 printf ".cargo/\ntarget/\n" >> .gitignore
-[ $LANG = "wasm" ] && printf "dist/\npkg/\n" >> .gitignore
+[ "$LANG" = "wasm" ] && printf "dist/\npkg/\n" >> .gitignore
 
 [ ! -f .rustfmt.toml ] && printf "tab_spaces = 2\n" > .rustfmt.toml
 
