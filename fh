@@ -20,14 +20,14 @@ EOF
   exit 1
 }
 
-if [ "$#" -lt 1 ]; then usage; fi
+if [ $# -lt 1 ]; then usage; fi
 
-if [ "$#" -eq 1 ]; then
+if [ $# -eq 1 ]; then
   LANG="default"
-  DIR="$1"
+  DIR=$1
 else
-  LANG="$1"
-  DIR="$2"
+  LANG=$1
+  DIR="$2
 fi
 
 shift $(( $# > 1 ? 2 : 1 ))
@@ -35,8 +35,8 @@ shift $(( $# > 1 ? 2 : 1 ))
 NO_GIT=0
 FORCE=0
 
-while [ "$#" -gt 0 ]; do
-  case "$1" in
+while [ $# -gt 0 ]; do
+  case $1 in
     --no-git) NO_GIT=1 ;;
     --force) FORCE=1 ;;
     -h|--help) usage ;;
@@ -45,23 +45,23 @@ while [ "$#" -gt 0 ]; do
   shift
 done
 
-mkdir -p "$DIR"
+mkdir -p $DIR
 
-if [ "$FORCE" -ne 1 ] && [ "$(find "$DIR" -mindepth 1 -maxdepth 1 | wc -l)" -gt 0 ]; then
-  echo "Directory "$DIR" is not empty. Use --force to continue." >&2
+if [ $FORCE -ne 1 ] && [ "$(find $DIR -mindepth 1 -maxdepth 1 | wc -l)" -gt 0 ]; then
+  echo "Directory $DIR is not empty. Use --force to continue." >&2
   exit 1
 fi
 
-cd "$DIR"
+cd $DIR
 
-proj_base="$(basename "$DIR")"
+proj_base="$(basename $DIR)"
 proj_name="$(printf '%s' "$proj_base" \
   | iconv -f utf8 -t ascii//TRANSLIT 2>/dev/null || true)"
 proj_name="$(printf '%s' "$proj_name" \
   | tr '[:upper:]' '[:lower:]' \
   | sed -E 's/[^a-z0-9]+/-/g; s/^-|-$//g')"
 
-if [ -z "$proj_name" ]; then
+if [ -z $proj_name ]; then
   echo "Invalid project name derived from '$DIR'" >&2
   exit 1
 fi
@@ -172,7 +172,7 @@ write_flake_wasm() {
 EOF
 }
 
-case "$LANG" in
+case $LANG in
   default) write_flake_default ;;
   rust)    write_flake_rust ;;
   wasm)    write_flake_wasm ;;
@@ -181,11 +181,11 @@ esac
 
 : > .gitignore
 printf ".cargo/\ntarget/\n" >> .gitignore
-[ "$LANG" = "wasm" ] && printf "dist/\npkg/\n" >> .gitignore
+[ $LANG = "wasm" ] && printf "dist/\npkg/\n" >> .gitignore
 
 [ ! -f .rustfmt.toml ] && printf "tab_spaces = 2\n" > .rustfmt.toml
 
-if [ "$NO_GIT" -eq 0 ] && [ ! -d .git ]; then
+if [ $NO_GIT -eq 0 ] && [ ! -d .git ]; then
   git init
   git add -A
   git commit -m "Initial commit (created by fh)" || true
@@ -193,7 +193,7 @@ fi
 
 cat <<EOF
 
-✔ Created flake project "${proj_name}" in: $(pwd)
+✔ Created flake project ${proj_name} in: $(pwd)
 
 Notes:
  - Use --no-git to skip git initialization.
