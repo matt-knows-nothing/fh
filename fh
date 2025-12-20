@@ -100,7 +100,8 @@ write_flake_default() {
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [ ];
           shellHook = ''
-            export PS1="${FH_PS1:-${PS1:-[\u@\h \w]$ }}"
+            export FH_PS1=${lib.escapeShellArg cfg.PS1}
+            export PS1="$FH_PS1"
          '';
         };
       }
@@ -133,7 +134,8 @@ write_flake_rust() {
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [ rust llvmPackages.bintools ];
           shellHook = ''
-            export PS1="${FH_PS1:-${PS1:-[\u@\h \w]$ }}"
+            export FH_PS1=${lib.escapeShellArg cfg.PS1}
+            export PS1="$FH_PS1"
             export CARGO_HOME="\$PWD/.cargo"
           '';
         };
@@ -173,7 +175,8 @@ write_flake_wasm() {
             rust llvmPackages.bintools nodejs wasm-pack trunk
           ];
           shellHook = ''
-            export PS1="${FH_PS1:-${PS1:-[\u@\h \w]$ }}"
+            export FH_PS1=${lib.escapeShellArg cfg.PS1}
+            export PS1="$FH_PS1"
             export CARGO_HOME="\$PWD/.cargo"
           '';
         };
