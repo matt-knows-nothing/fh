@@ -141,6 +141,7 @@ write_flake_rust() {
               export PS1="[\u@\h \w]$ "
             else
               export PS1="${FH_PS1}"
+            fi
             export CARGO_HOME="\$PWD/.cargo"
           '';
         };
@@ -184,6 +185,7 @@ write_flake_wasm() {
               export PS1="[\u@\h \w]$ "
             else
               export PS1="${FH_PS1}"
+            fi
             export CARGO_HOME="\$PWD/.cargo"
           '';
         };
