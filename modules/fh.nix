@@ -13,7 +13,7 @@ in {
       type = lib.types.str;
       # default matches the DEFAULT_PS1 in the script above
       default = ''
-        [\u@\h \w]$ 
+        [\u@\h \w]$ \0
       '';
       description = "Prompt (PS1) injected into dev shells created by fh. Use bash escape sequences.";
     };
