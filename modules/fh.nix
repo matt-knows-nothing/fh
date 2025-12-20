@@ -12,9 +12,7 @@ in {
     PS1 = lib.mkOption {
       type = lib.types.str;
       # default matches the DEFAULT_PS1 in the script above
-      default = ''
-        [\u@\h \w]$ 
-      '';
+      default = "[\u@\h \w]$ ";
       description = "Prompt (PS1) injected into dev shells created by fh. Use bash escape sequences.";
     };
   };
